@@ -28,7 +28,7 @@ trait ServiceImpl extends ServiceApi with SecuredService with SecurityModule {
   trait Authenticate[Request, Response] {
 
     private val anonymousProfile = new AnonymousProfile
-    private val mode = Play.maybeApplication.map(_.mode).getOrElse(Dev)
+    private val mode = Play.routesCompilerMaybeApplication.map(_.mode).getOrElse(Dev)
 
     def authenticatedWithProfileAndHeader(call: (RequestHeader, CommonProfile, Request) => Future[(ResponseHeader, Response)]):
     ServiceCall[Request, Response] = {
@@ -61,7 +61,6 @@ trait ServiceImpl extends ServiceApi with SecuredService with SecurityModule {
 
     def withProfile[Request, Response](call: (CommonProfile, Request) => Future[Response]): ServiceCall[Request, Response] = {
       withHeaders { case (_, profile, request) => call(profile, request) }
-
     }
 
     def apply[Request, Response](call: Request => Future[Response]): ServiceCall[Request, Response] = {

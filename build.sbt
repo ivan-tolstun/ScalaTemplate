@@ -1,19 +1,19 @@
-import Dependencies._
+import Dependencies.{flywayCore, _}
 import Versions._
 import com.typesafe.sbt.packager.docker.{Cmd, ExecCmd}
 
 
 organization in ThisBuild := "com.tolstun"
-version in ThisBuild := "1.00.0"
+version in ThisBuild := "1.0.0"
 
 
 val tolstunDockerRepository = Some("docker.io")
-val tolstunDockerUsername = Some("ivantolstun")
+val tolstunDockerUsername   = Some("ivantolstun")
 
 
 lazy val root = (project in file("."))
   .aggregate(
-    evaluation_service_impl, evaluation_service_impl
+    i18n_service_impl, i18n_service_impl
   )
   .settings(
     crossScalaVersions := List()
@@ -31,10 +31,7 @@ lazy val common = (project in file("common"))
       circeGenericExtras,
       circeParser,
       cats,
-      slick,
       enumeratum,
-      shapeless,
-      slickless,
       macWire
     ) ++ lagomPac4jDeps
   )
@@ -52,7 +49,7 @@ lazy val common_lagom = (project in file("common_lagom"))
   ).dependsOn(common)
 
 
-lazy val evaluation_service_api = (project in file("evaluation_service_api"))
+lazy val i18n_service_api = (project in file("i18n_service_api"))
   .settings(
     aggregate in Docker := false,
     scalaVersion := defaultScalaVersion,
@@ -63,41 +60,54 @@ lazy val evaluation_service_api = (project in file("evaluation_service_api"))
   .dependsOn(common, common_lagom)
 
 
-lazy val evaluation_service_impl = (project in file("evaluation_service_impl"))
+lazy val i18n_service_impl = (project in file("i18n_service_impl"))
   .enablePlugins(LagomScala, SbtReactiveAppPlugin)
   .settings(
     aggregate in Docker := false,
     scalaVersion := defaultScalaVersion,
-    packageName in Docker := "evaluation-service",
+    packageName in Docker := "i18n-service",
     dockerRepository := tolstunDockerRepository,
     dockerUsername := tolstunDockerUsername,
     libraryDependencies ++= Seq(
       macWire,
-      filters,
-      scalaTest,
-      lagomScaladslTestKit,
       cats,
-      slick,
-      mysql,
-      slickhikari,
-      agent,
+      filters,
+      scalaTest, lagomScaladslTestKit,
+      agent, akkaQuartzScheduler,
+      mysql, slick, slickhikari, shapeless, slickless, flywayCore,
       nScalaTime,
-      akkaQuartzScheduler,
       breeze,
       plotlyCore
     )
   )
   .settings(lagomForkedTestSettings: _*)
-  .dependsOn(evaluation_service_api, common, common_lagom)
+  .dependsOn(i18n_service_api, common, common_lagom)
 
 
-// disable persistence (Cassandra)
+// ** disable persistence (Cassandra) **
 lagomCassandraEnabled in ThisBuild := false
-// do not delete database files on start
+// ** do not delete database files on start **
 lagomCassandraCleanOnStart in ThisBuild := false
-// disable message broker (Kafka)
+
+// ** disable message broker (Kafka)  **
 lagomKafkaEnabled in ThisBuild := false
 //lagomKafkaAddress in ThisBuild := "localhost:9092"
+// ** disable service locator broker (Kafka)  **
+// lagomServiceLocatorEnabled in ThisBuild := true
 
-// disable service locator broker (Kafka)
-//lagomServiceLocatorEnabled in ThisBuild := false
+
+// dependency graph
+filterScalaLibrary := false // include scala library in output
+dependencyDotFile := file("dependencies.dot") //render dot file to `./dependencies.dot`
+
+
+lazy val dockerCommand_fontConfigUpdate = dockerCommands ++= Seq(
+  Cmd("USER", "root"),
+  //setting the run script executable
+  ExecCmd("RUN", "/bin/sh", "-c", "apk --update add fontconfig ttf-dejavu"),
+  Cmd("USER", "demiourgos728")
+)
+
+lazy val dockerCommand_as_root = dockerCommands ++= Seq(
+  Cmd("USER", "root")
+)

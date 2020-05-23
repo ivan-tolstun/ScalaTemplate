@@ -13,6 +13,7 @@ import play.api.{Configuration, Play}
 
 import scala.util.Try
 
+
 class JwtHeaderFilter(val serviceName: String) extends HeaderFilter with SecurityModule {
 
   override def configuration: Configuration = Configuration(ConfigFactory.load())
@@ -46,7 +47,7 @@ class JwtHeaderFilter(val serviceName: String) extends HeaderFilter with Securit
       hostPassed && agentPassed
     }
 
-    val mode = Play.maybeApplication.map(_.mode).getOrElse(Dev)
+    val mode = Play.routesCompilerMaybeApplication.map(_.mode).getOrElse(Dev)
 
     if ((mode == Prod) && !checkIsLocalCall()) {
 

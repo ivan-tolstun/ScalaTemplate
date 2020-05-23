@@ -2,6 +2,7 @@ package com.tolstun.common.serializers
 
 import com.tolstun.common.dto.Common.ErrorMessage
 
+
 object CustomSerializerTypeClass {
 
   trait CustomEncoder[T] {

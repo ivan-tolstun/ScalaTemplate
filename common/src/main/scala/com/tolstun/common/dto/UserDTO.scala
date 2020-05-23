@@ -2,11 +2,10 @@ package com.tolstun.common.dto
 
 import java.time.LocalDate
 
-import com.tolstun.common.dto.Common.CirceSerializable
 
 object UserDTO {
 
-  sealed trait Root extends CirceSerializable
+  sealed trait Root //extends CirceSerializable
 
   case class UserDTO(userId: String,
                      login: Option[String] = None,
