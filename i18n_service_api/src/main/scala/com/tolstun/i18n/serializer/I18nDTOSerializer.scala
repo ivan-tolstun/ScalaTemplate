@@ -65,19 +65,6 @@ trait I18nDTOSerializer {
           case (page, translationList) => (page, TranslationDTOList(translationList))
         }
 
-      def groupByPageAndSection: Map[String, Map[String, Json]] = translationList.languages
-        .groupBy(t => (t.page, t.section))
-        .map {
-          case ((page: String, section: String), translationList: List[TranslationDTO]) => {
-
-            val langMap: Map[String, Json] = translationList.map {
-              lang => (lang.tag, Json.fromString(lang.value))
-            }.toMap
-
-            (s"$page$section", langMap)
-          }
-        }
-
     }
 
     (langRespList: TranslationDTOList) =>
