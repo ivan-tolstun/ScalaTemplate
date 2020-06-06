@@ -1,12 +1,12 @@
 // based on https://gist.github.com/AlexanderRay/80d9c061ec8ecc68fd0e641f3ce3f1f9
 
-package com.tolstun.common.lagom.serializers
+package com.tolstun.common.serializers
 
 import akka.util.ByteString
-import com.tolstun.common.serializers.EitherSerializer
 import com.lightbend.lagom.scaladsl.api.deser.MessageSerializer.{NegotiatedDeserializer, NegotiatedSerializer}
 import com.lightbend.lagom.scaladsl.api.deser.{PathParamSerializer, StrictMessageSerializer}
 import com.lightbend.lagom.scaladsl.api.transport.{DeserializationException, SerializationException, _}
+import com.tolstun.common.dto.CirceDTO.CirceSerializable
 import io.circe._
 import io.circe.parser._
 import io.circe.syntax._
@@ -67,7 +67,7 @@ trait CirceSerializer extends EitherSerializer {
   }
 
 
-  implicit def toSerializer[A](implicit encoder: Encoder[A],
+  implicit def toSerializer[A <: CirceSerializable](implicit encoder: Encoder[A],
                                decoder: Decoder[A]): StrictMessageSerializer[A] = convertToSerializer
 
 
@@ -85,18 +85,18 @@ trait CirceSerializer extends EitherSerializer {
                                      decoder: Decoder[Json]): StrictMessageSerializer[Json] = convertToSerializer
 
 
-  def deserializeFunction[Param](value: String)
+  def deserializeFunction[Param <: CirceSerializable](value: String)
                                 (implicit decoder: Decoder[Param]): Param = decode[Param](value).fold(
     error => throw new TransportException(TransportErrorCode.BadRequest, error.getLocalizedMessage),
     msg => msg
   )
 
 
-  def serializeFunction[Param](value: Param)
+  def serializeFunction[Param <: CirceSerializable](value: Param)
                               (implicit encoder: Encoder[Param]): String = value.asJson.noSpaces
 
 
-  implicit def circePathSerializer[Param](implicit decoder: Decoder[Param],
+  implicit def circePathSerializer[Param <: CirceSerializable](implicit decoder: Decoder[Param],
                                           encoder: Encoder[Param],
                                           tag: ClassTag[Param]): PathParamSerializer[Param] = {
     val className = tag.toString.split('$').last.split('.').last

@@ -1,7 +1,7 @@
 package com.tolstun.i18n.impl
 
 import akka.actor.ActorSystem
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer, Supervision}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer, Supervision, SystemMaterializer}
 import akka.{Done, NotUsed}
 import com.tolstun.common.lagom.service.ServiceImpl
 import com.lightbend.lagom.scaladsl.api.ServiceCall
@@ -35,9 +35,7 @@ class I18nServiceImpl(db: Database,
 
   implicit val ec: ExecutionContextExecutor = actorSystem.dispatcher
 
-  implicit val actorMaterializer: ActorMaterializer = ActorMaterializer(
-    ActorMaterializerSettings(actorSystem).withSupervisionStrategy(decider))(actorSystem)
-
+  implicit val actorMaterializer: Materializer = SystemMaterializer(actorSystem).materializer
 
   private lazy val i18nDataAccessService = wire[I18nDataAccessService]
 
@@ -57,11 +55,11 @@ class I18nServiceImpl(db: Database,
   }
 
 
-  override def getTranslationDTO: ServiceCall[NotUsed, TranslationDTOList] = Auth.withHeaders {
+  override def getTranslationDTO(languageCode: String): ServiceCall[NotUsed, TranslationDTOList] = Auth.withHeaders {
     case (header, profile, request) =>
 
       i18nDataAccessService
-        .getTranslationSeq()
+        .getTranslationSeq(languageCode)
         .map(_.map(_.toDTO).toList)
         .map(TranslationDTOList)
   }

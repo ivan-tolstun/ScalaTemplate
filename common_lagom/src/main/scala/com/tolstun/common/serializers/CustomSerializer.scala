@@ -1,4 +1,4 @@
-package com.tolstun.common.lagom.serializers
+package com.tolstun.common.serializers
 
 import com.tolstun.common.serializers.CustomSerializerTypeClass._
 import com.lightbend.lagom.scaladsl.api.deser.PathParamSerializer

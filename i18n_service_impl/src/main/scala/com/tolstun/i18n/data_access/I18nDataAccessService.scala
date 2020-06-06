@@ -25,8 +25,9 @@ class I18nDataAccessService(db: Database) {
   }
 
 
-  def getTranslationSeq(): Future[Seq[I18n.Translation]] = db.run {
+  def getTranslationSeq(languageCode: String): Future[Seq[I18n.Translation]] = db.run {
     i18nTable
+      .filter(_.language_code.toLowerCase === languageCode.toLowerCase)
       .map(_.translation)
       .result
   }

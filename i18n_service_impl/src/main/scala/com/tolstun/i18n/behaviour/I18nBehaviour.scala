@@ -19,7 +19,8 @@ trait I18nBehaviour {
   implicit class TranslationDTOOpt(val translation: Translation) extends AnyRef {
 
     def toDTO: TranslationDTO = TranslationDTO(
-      translation.topic,
+      translation.page,
+      translation.section,
       translation.tag,
       translation.customTranslation.getOrElse(translation.defaultTranslation))
 

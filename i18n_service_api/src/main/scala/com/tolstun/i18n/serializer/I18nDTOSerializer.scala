@@ -23,38 +23,67 @@ trait I18nDTOSerializer {
 
   implicit val translationListDecoder: Decoder[TranslationDTOList] = (c: HCursor) => {
 
-    val decoderTopic =
-      Decoder.decodeMap(KeyDecoder.decodeKeyString, (Decoder.decodeJson)).decodeJson(c.value)
+    val decoderPage = Decoder.decodeMap(KeyDecoder.decodeKeyString, (Decoder.decodeJson)).decodeJson(c.value)
+    decoderPage.map(_.flatMap { case (page, langJson) =>
 
-    decoderTopic.map(_.map { case (topic, langJson) =>
+      val decoderSection = Decoder.decodeMap(KeyDecoder.decodeKeyString, (Decoder.decodeJson)).decodeJson(c.value)
+      decoderSection.map(_.flatMap { case (section, langJson) =>
 
-      val decoderlang = Decoder.decodeMap(KeyDecoder.decodeKeyString, (Decoder.decodeString)).decodeJson(langJson)
+        val decoderlang = Decoder.decodeMap(KeyDecoder.decodeKeyString, (Decoder.decodeString)).decodeJson(langJson)
+        decoderlang.map(_.map {
+          case (tag, lang) => TranslationDTO(page, section, tag, lang)
+        }).getOrElse(throw new RuntimeException(s"Failed to decode json to ${TranslationDTOList.getClass.getSimpleName}")).toList
 
-      decoderlang.map(_.map { case (tag, lang) =>
-        TranslationDTO(topic, tag, lang)
-      })
-        .getOrElse(throw new RuntimeException(s"Failed to decode json to ${TranslationDTOList.getClass.getSimpleName}")).toList
+      }).getOrElse(throw new RuntimeException(s"Failed to decode json to ${TranslationDTOList.getClass.getSimpleName}")).toList
 
     })
-      .map(_.toList.flatten)
+      .map(_.toList)
       .map(TranslationDTOList)
   }
 
+
   implicit val translationListEncoder: Encoder[TranslationDTOList] = {
+
+    implicit class TranslationDTOOpt(val translationList: TranslationDTOList) extends AnyRef {
+
+      def groupBySection: Map[String, Map[String, Json]] = translationList.languages
+        .groupBy(_.section)
+        .map {
+          case (section: String, translationList: List[TranslationDTO]) => {
+
+            val langMap: Map[String, Json] = translationList.map {
+              lang => (lang.tag, Json.fromString(lang.value))
+            }.toMap
+
+            (section, langMap)
+          }
+        }
+
+      def groupByPage: Map[String, TranslationDTOList] = translationList.languages
+        .groupBy(_.page)
+        .map {
+          case (page, translationList) => (page, TranslationDTOList(translationList))
+        }
+
+      def groupByPageAndSection: Map[String, Map[String, Json]] = translationList.languages
+        .groupBy(t => (t.page, t.section))
+        .map {
+          case ((page: String, section: String), translationList: List[TranslationDTO]) => {
+
+            val langMap: Map[String, Json] = translationList.map {
+              lang => (lang.tag, Json.fromString(lang.value))
+            }.toMap
+
+            (s"$page$section", langMap)
+          }
+        }
+
+    }
 
     (langRespList: TranslationDTOList) =>
       langRespList
-        .languages
-        .groupBy(_.topic)
-        .map { case (topic, group) =>
-
-          val langMap = group.map {
-            lang => (lang.tag, Json.fromString(lang.value))
-          }.toMap
-
-          (topic, langMap)
-        }
-        .toMap
+        .groupByPage
+        .map { case (page, translationsList) => (page, translationsList.groupBySection) }
         .asJson
   }
 

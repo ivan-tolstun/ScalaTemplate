@@ -1,6 +1,6 @@
 package com.tolstun.common.serializers
 
-import com.tolstun.common.dto.Common.ErrorMessage
+import com.tolstun.common.dto.ErrorDTO.ErrorMessage
 
 
 object CustomSerializerTypeClass {

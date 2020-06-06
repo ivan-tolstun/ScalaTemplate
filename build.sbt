@@ -19,12 +19,10 @@ lazy val root = (project in file("."))
     crossScalaVersions := List()
   )
 
-
-lazy val common = (project in file("common"))
+lazy val common_lagom = (project in file("common_lagom"))
   .settings(
     aggregate in Docker := false,
     scalaVersion := defaultScalaVersion,
-    target := file(s"common/target_custom/$defaultScalaVersion/"),
     libraryDependencies ++= Seq(
       lagomScaladslApi,
       circeCore,
@@ -32,21 +30,10 @@ lazy val common = (project in file("common"))
       circeParser,
       cats,
       enumeratum,
-      macWire
-    ) ++ lagomPac4jDeps
-  )
-
-
-lazy val common_lagom = (project in file("common_lagom"))
-  .settings(
-    aggregate in Docker := false,
-    scalaVersion := defaultScalaVersion,
-    libraryDependencies ++= Seq(
-      lagomScaladslApi,
+      macWire,
       lagomScaladslServer,
-      macWire
-    )
-  ).dependsOn(common)
+    ) ++ lagomPac4jDeps
+  ).dependsOn()
 
 
 lazy val i18n_service_api = (project in file("i18n_service_api"))
@@ -57,7 +44,7 @@ lazy val i18n_service_api = (project in file("i18n_service_api"))
       lagomScaladslApi
     )
   )
-  .dependsOn(common, common_lagom)
+  .dependsOn(common_lagom)
 
 
 lazy val i18n_service_impl = (project in file("i18n_service_impl"))
@@ -81,7 +68,7 @@ lazy val i18n_service_impl = (project in file("i18n_service_impl"))
     )
   )
   .settings(lagomForkedTestSettings: _*)
-  .dependsOn(i18n_service_api, common, common_lagom)
+  .dependsOn(i18n_service_api, common_lagom)
 
 
 // ** disable persistence (Cassandra) **
@@ -94,11 +81,6 @@ lagomKafkaEnabled in ThisBuild := false
 //lagomKafkaAddress in ThisBuild := "localhost:9092"
 // ** disable service locator broker (Kafka)  **
 // lagomServiceLocatorEnabled in ThisBuild := true
-
-
-// dependency graph
-filterScalaLibrary := false // include scala library in output
-dependencyDotFile := file("dependencies.dot") //render dot file to `./dependencies.dot`
 
 
 lazy val dockerCommand_fontConfigUpdate = dockerCommands ++= Seq(

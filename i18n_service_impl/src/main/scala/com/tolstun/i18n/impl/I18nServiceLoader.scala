@@ -1,8 +1,6 @@
 package com.tolstun.i18n.impl
 
 import com.tolstun.common.constants.ConfigPaths
-import com.tolstun.common.dto.LoginContext
-import com.tolstun.common.dto.UserDTO.UserDTO
 import com.lightbend.lagom.scaladsl.devmode.LagomDevModeComponents
 import com.lightbend.lagom.scaladsl.server.{LagomApplication, LagomApplicationContext, LagomApplicationLoader, LagomServer}
 import com.lightbend.rp.servicediscovery.lagom.scaladsl.LagomServiceLocatorComponents
